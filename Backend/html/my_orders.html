@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Orders | Premium Shop</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-black min-h-screen text-gray-100">
+  <nav class="bg-gray-900 shadow flex items-center justify-between px-8 py-4">
+    <div class="text-xl font-bold text-blue-400">Premium Shop</div>
+    <div class="flex items-center gap-4">
+      <span id="userName" class="font-semibold text-gray-200"></span>
+      <img id="userPic" src="" alt="Profile" class="w-10 h-10 rounded-full border border-gray-700">
+      <a href="home.html" class="text-blue-400 hover:underline font-semibold">Home</a>
+      <button id="logoutBtn" class="bg-red-700 text-white px-3 py-1 rounded hover:bg-red-800">Logout</button>
+    </div>
+  </nav>
+  <main class="p-8">
+    <h2 class="text-2xl font-bold mb-6 text-gray-100">My Orders</h2>
+    <div id="orders" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
+  </main>
+  <script>
+
+    // Redirect if not logged in
+    const token = localStorage.getItem('jwt');
+    if (!token) window.location.href = 'login.html';
+
+
+
+        //our Vtz style Middleware
+    fetch("http://localhost:6363/api/auth/checkAuth", {
+      headers: { Authorization: `Bearer ${token}` }
+    }).then(async res=>{
+      console.log(await res.json()); 
+      if(!res.ok){
+        localStorage.clear()
+        window.location.href = 'login.html';
+      }
+    })
+
+
+
+    // Fetch user profile
+    fetch('http://localhost:6363/api/auth/profile', {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+    .then(res => res.json())
+      .then(user => {
+        document.getElementById('userName').textContent = user.name;
+        document.getElementById('userPic').src = user.picture || 'https://ui-avatars.com/api/?name=' + user.name;
+      });
+      // Logout
+      document.getElementById('logoutBtn').onclick = function() {
+        document.cookie = 'token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;';
+        window.location.href = 'login.html';
+      };
+      fetch('http://localhost:6363/api/orders', {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      .then(res => res.json())
+      .then(orders => {
+        const container = document.getElementById('orders');
+        container.innerHTML = '';
+        if (!orders.length) {
+          container.innerHTML = '<p class="text-gray-600">No orders found.</p>';
+          return;
+        }
+        orders.forEach(
+          (order, i) => {
+          console.log(orders[i].name)
+          const card = document.createElement('div');
+          card.className = 'bg-gray-800 rounded-xl shadow p-6 flex flex-col items-center border border-gray-700';
+          card.innerHTML = `
+            <img src="${orders[i].image}" alt="${orders[i].name}" class="w-20 h-20 object-cover mb-4 rounded border border-gray-700">
+            <h3 class="text-lg font-bold mb-2 text-gray-100">${orders[i].name}</h3>
+            <div class="text-blue-400 font-bold text-xl mb-2">₹${orders[i].price}</div>
+            <p class="text-gray-400 mb-2">Order ID: ${orders[i]._id}</p>
+            <p class="text-green-400 font-semibold">Paid</p>
+          `;
+          container.appendChild(card);
+        });
+      }); 
+  </script>
+</body>
+</html>

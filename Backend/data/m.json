@@ -1,0 +1,36 @@
+{
+  "orderItems": {
+    "selectedSabjis": [
+      {
+        "id": "1",
+        "name": "Dal Tadka",
+        "image": "https://images.pexels.com/photos/5560763/pexels-photo-5560763.jpeg?auto=compress&cs=tinysrgb&w=150",
+        "type": "veg",
+        "taste": "mild"
+      },
+      {
+        "id": "2",
+        "name": "Paneer Butter Masala",
+        "image": "https://images.pexels.com/photos/2474658/pexels-photo-2474658.jpeg?auto=compress&cs=tinysrgb&w=150",
+        "type": "veg",
+        "taste": "mild"
+      }
+    ],
+    "baseOption": "both",
+    "extraRoti": 1,
+    "upgrades": {
+      "specialPaneer": true,
+      "extraRaita": false,
+      "saladAddons": false
+    },
+    "quantity": 2
+  },
+  "deliveryAddress": {
+    "id": "manual_1700000000000",
+    "type": "manual",
+    "address": "Hostel A, Room 101",
+    "hostel": "Hostel A",
+    "room": "101"
+  },
+  "totalAmount": 340
+}

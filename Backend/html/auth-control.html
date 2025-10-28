@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Auth Success</title>
+</head>
+<body>
+  <h1>Processing login...</h1>
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const token = urlParams.get('token');
+    
+    if (token) { 
+      localStorage.setItem('jwt', token);
+      window.location.href = '/frontend/html/home.html'; 
+    } else {
+      alert('Authentication failed. No token received.');
+      window.location.href = '/frontend/html/login.html'; 
+    }
+  </script>
+</body>
+</html>

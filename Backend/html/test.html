@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Profile Fetcher</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom font for a modern look */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f7f9fb;
+        }
+        /* Custom utility to center content */
+        .center-screen {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+    </style>
+</head>
+<body class="center-screen p-4">
+
+    <div id="profile-card" class="bg-white p-8 md:p-10 rounded-xl shadow-2xl max-w-md w-full transform transition-all duration-300">
+        <h1 class="text-3xl font-extrabold text-gray-900 mb-6 text-center">User Profile Dashboard</h1>
+        
+        <p class="text-sm text-center text-gray-500 mb-8">
+            This frontend needs to send the authentication cookie with the request.
+        </p>
+
+        <!-- Profile Display Area -->
+        <div id="profile-container" class="space-y-4">
+            <!-- Loading, Error, or Data will appear here -->
+        </div>
+
+        <!-- Action Button -->
+        <button id="fetch-button" 
+                onclick="fetchProfile()"
+                class="w-full mt-8 py-3 px-4 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700 transition duration-300 ease-in-out transform hover:scale-[1.01] focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50 disabled:opacity-50 disabled:cursor-not-allowed">
+            Fetch My Profile
+        </button>
+
+        <p class="text-xs text-red-500 mt-4 text-center">
+            *Ensure your backend is running on <code class="bg-red-50 px-1 py-0.5 rounded">http://localhost:3000</code> and you have an authentication cookie set in the browser for this to work.*
+        </p>
+    </div>
+
+    <script>
+        // --- API Configuration ---
+        // IMPORTANT: Replace this with your actual backend URL where the server is running.
+        const API_BASE_URL = "http://localhost:6363";
+        const PROFILE_ENDPOINT = "/api/userAuth/profile";
+        const apiUrl = API_BASE_URL + PROFILE_ENDPOINT;
+
+        // --- DOM Elements ---
+        const profileContainer = document.getElementById('profile-container');
+        const fetchButton = document.getElementById('fetch-button');
+
+        // --- Helper Functions for UI Rendering ---
+
+        function setLoading(isLoading) {
+            fetchButton.disabled = isLoading;
+            fetchButton.textContent = isLoading ? 'Fetching...' : 'Fetch My Profile';
+            if (isLoading) {
+                profileContainer.innerHTML = '<div class="flex justify-center items-center p-4"><div class="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div></div>';
+            }
+        }
+
+        function displayProfile(data) {
+            profileContainer.innerHTML = `
+                <div class="bg-green-50 border border-green-300 p-4 rounded-lg">
+                    <h3 class="text-xl font-bold text-green-700 mb-2">✅ Profile Found!</h3>
+                    <p class="text-sm text-green-800">Your authentication token was successfully verified.</p>
+                </div>
+                <div class="space-y-3 p-4 bg-gray-50 rounded-lg border">
+                    <p class="flex justify-between">
+                        <span class="font-semibold text-gray-600">Name:</span> 
+                        <span class="text-gray-800 font-medium">${data.name || 'N/A'}</span>
+                    </p>
+                    <p class="flex justify-between">
+                        <span class="font-semibold text-gray-600">Email:</span> 
+                        <span class="text-gray-800 font-medium">${data.email || 'N/A'}</span>
+                    </p>
+                    <p class="flex justify-between">
+                        <span class="font-semibold text-gray-600">User ID:</span> 
+                        <span class="text-gray-800 font-medium truncate">${data._id || 'N/A'}</span>
+                    </p>
+                </div>
+            `;
+        }
+
+        function displayError(message) {
+            profileContainer.innerHTML = `
+                <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+                    <strong class="font-bold">Error:</strong>
+                    <span class="block sm:inline">${message}.</span>
+                    <p class="mt-2 text-sm">You may need to log in first to receive a 'token' cookie from the server.</p>
+                </div>
+            `;
+        }
+        
+        // --- Core Fetch Logic with Exponential Backoff ---
+
+        /**
+         * Fetches data with built-in retry logic using exponential backoff.
+         * @param {string} url - The API endpoint URL.
+         * @param {object} options - Fetch options (including method, headers, credentials).
+         * @param {number} retries - Maximum number of retries.
+         * @returns {Promise<Response>} The successful fetch response.
+         */
+        async function fetchWithRetry(url, options, retries = 3) {
+            for (let i = 0; i < retries; i++) {
+                try {
+                    const response = await fetch(url, options);
+                    
+                    // Handle specific authentication error
+                    if (response.status === 401 || response.status === 403) {
+                        throw new Error('Authentication failed (401/403). Please check if your token cookie is set.');
+                    }
+
+                    // Handle generic bad responses
+                    if (!response.ok) {
+                        let errorDetail = await response.text().catch(() => response.statusText);
+                        // If JSON response is available, try to get a message
+                        try {
+                            const json = JSON.parse(errorDetail);
+                            errorDetail = json.message || errorDetail;
+                        } catch (e) { /* ignore parse error */ }
+                        throw new Error(`Server returned status ${response.status}: ${errorDetail}`);
+                    }
+                    
+                    return response;
+                } catch (error) {
+                    if (i === retries - 1) {
+                        // Throw on final attempt
+                        throw error;
+                    }
+                    console.warn(`[Attempt ${i + 1}/${retries}] Request failed: ${error.message}. Retrying in ${2 ** i}s...`);
+                    // Exponential backoff delay (1s, 2s, 4s, ...)
+                    await new Promise(resolve => setTimeout(resolve, 1000 * (2 ** i)));
+                }
+            }
+        }
+
+
+        /**
+         * Main function to fetch the user profile.
+         */
+        async function fetchProfile() {
+            setLoading(true);
+            
+            try {
+                const response = await fetchWithRetry(apiUrl, {
+                    method: 'GET',
+                    // CRITICAL: This ensures the browser sends the 'token' cookie
+                    // back to the server, which is required for authentication
+                    // in your cross-origin setup (cors config in backend).
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                // The response should be the user object
+                const data = await response.json();
+                
+                // Assuming the backend returns an object like: 
+                // { _id: "...", name: "User Name", email: "user@example.com" }
+                displayProfile(data);
+
+            } catch (error) {
+                // Display user-friendly error message
+                displayError(error.message);
+                console.error("Profile Fetch Error:", error);
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        // Initialize the view with a message
+        displayError("Click the button to try and fetch your profile. If you are not logged in, you will see an error.");
+    </script>
+</body>
+</html>

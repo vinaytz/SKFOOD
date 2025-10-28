@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login | Premium Shop</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-black flex items-center justify-center min-h-screen text-gray-100">
+  <div class="w-full max-w-md bg-gray-900 rounded-xl shadow-lg p-8 border border-gray-700">
+    <h2 class="text-2xl font-bold mb-6 text-center text-gray-100">Login to Premium Shop</h2>
+    <form id="loginForm" class="space-y-4">
+      <input type="email" name="email" placeholder="Email" required class="w-full px-4 py-2 border border-gray-700 rounded bg-gray-800 text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400">
+      <input type="password" name="password" placeholder="Password" required class="w-full px-4 py-2 border border-gray-700 rounded bg-gray-800 text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400">
+      <button type="submit" class="w-full bg-blue-700 text-white py-2 rounded hover:bg-blue-800 font-semibold">Login</button>
+    </form>
+    <div class="mt-4 text-center">
+      <button id="googleLogin" class="w-full bg-red-700 text-white py-2 rounded hover:bg-red-800 font-semibold flex items-center justify-center">
+        <img src="https://www.svgrepo.com/show/355037/google.svg" alt="Google" class="w-5 h-5 mr-2"> Login with Google
+      </button>
+    </div>
+    <p class="mt-4 text-center text-gray-400">Don't have an account? <a href="signup.html" class="text-blue-400 hover:underline">Sign up</a></p>
+    <p id="errorMsg" class="mt-2 text-center text-red-400"></p>
+  </div>
+  <script>
+    // Handle login form submit
+    document.getElementById('loginForm').onsubmit = async function(e) {
+      e.preventDefault();
+      const email = this.email.value;
+      const password = this.password.value;
+      const res = await fetch('http://localhost:6363/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      const data = await res.json();
+      if (data.token) {
+        localStorage.setItem("jwt", data.token)
+        window.location.href = 'home.html';
+      } else {
+        document.getElementById('errorMsg').textContent = data.message || 'Login failed';
+      }
+    };
+    // Google login
+    document.getElementById('googleLogin').onclick = function() {
+      window.location.href = 'http://localhost:6363/api/auth/google';
+    };
+  </script>
+</body>
+</html>
