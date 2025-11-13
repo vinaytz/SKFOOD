@@ -243,15 +243,6 @@ async function orderPreparedThali(req, res) {
   }
 }
 
-async function myAllOrders(req, res){
-    try {
-        const orders = await orderModel.find({userId: res.userId})
-        res.json(orders)
-    } catch (error) {
-    res.json({'message': `Somwthing went worng ${error}`})
-    }
-}
-
 async function confirmedOrders(req, res){
     try {
         // console.log(req.userId)
@@ -278,7 +269,6 @@ module.exports = {
     seeDinnerMenu,
     prepareYourThali,
     orderPreparedThali,
-    myAllOrders,
     confirmedOrders,
     myOrderwithId
 }

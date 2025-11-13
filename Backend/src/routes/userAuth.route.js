@@ -5,6 +5,8 @@ const auth = require("../controllers/userAuth.controller")
 router.post("/signup", auth.signup)
 router.post("/login", auth.login)
 
+router.get("/verify", auth.verify)
+
 router.get("/google", auth.googleAuth)
 router.get("/google/callback", auth.googleAuthCallback)
 

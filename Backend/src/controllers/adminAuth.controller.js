@@ -37,4 +37,40 @@ function adminLogout(req, res){
 
 }
 
-module.exports = {adminLogin, adminLogout}
+
+
+async function verify(req, res) {
+  try {
+    const token = req.cookies.token; 
+    if (!token) {
+      return res.status(401).json({ message: "No token provided" });
+    }
+    
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    
+    // Fetch the user from database using the decoded ID
+    const user = await adminModel.findById(decoded._id).select('-password'); // Exclude password
+    
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    
+    // Return user data that matches your frontend User interface
+    return res.status(200).json({ 
+      success: true
+    });
+    
+  } catch (error) {
+    if (error.name === 'JsonWebTokenError') {
+      return res.status(401).json({ message: "Invalid token" });
+    }
+    if (error.name === 'TokenExpiredError') {
+      return res.status(401).json({ message: "Token expired" });
+    }
+    
+    console.error('Verify error:', error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+}
+
+module.exports = {adminLogin, adminLogout, verify}

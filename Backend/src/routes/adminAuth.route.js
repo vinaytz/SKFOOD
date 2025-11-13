@@ -5,4 +5,6 @@ const auth = require("../controllers/adminAuth.controller")
 router.post("/login", auth.adminLogin)
 router.post("/logout", auth.adminLogout)
 
+router.get("/verify", auth.verify)
+
 module.exports = router

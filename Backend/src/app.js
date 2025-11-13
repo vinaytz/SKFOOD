@@ -24,7 +24,8 @@ app.use("/api/admin", adminAuth)   //Admin ✅
 app.use("/api/admin", adminPanel)   //Admin
 
 app.use("/api/userAuth", userAuth)  //User ✅
-app.use("/api/userPanel",userAuthMiddlewareForAuth, userPanel) //User
+// app.use("/api/userPanel",userAuthMiddlewareForAuth, userPanel) //User
+app.use("/api/userPanel", userPanel) //User
 
 
 
