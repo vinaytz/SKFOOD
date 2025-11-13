@@ -11,7 +11,7 @@ const userPanel = require("./routes/userPanel.route")
 const {userAuthMiddlewareForAuth} = require("./middleware/userAuth.middleware")
 
 app.use(cors({
-  origin: "https://skfood.onrender.com/",
+  origin: "https://skfood.vercel.app/",
   credentials: true,                // cookies/jwt bhejne ke liye
 }));
 
